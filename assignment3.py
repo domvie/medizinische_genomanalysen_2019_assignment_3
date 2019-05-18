@@ -154,7 +154,7 @@ class Assignment3:
         '''
    
         ## Document the final URL here
-        print("The .vcf file was compressed with bgzip and a tabix index created with 'tabix -p vcf chr16.vcf.gz'')
+        print("The .vcf file was compressed with bgzip and a tabix index created with 'tabix -p vcf chr16.vcf.gz'")
         print("The resulting files were uploaded to https://vcf.iobio.io/")
         print("The final URL: https://vcf.iobio.io/?species=Human&build=GRCh38")
             
