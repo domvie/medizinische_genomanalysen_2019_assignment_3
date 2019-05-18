@@ -1,9 +1,10 @@
 #! /usr/bin/env python3
 
 import vcf
+import myvariant
 import httplib2
 
-__author__ = 'XXX'
+__author__ = 'Dominic Viehböck'
 
 
 ##
@@ -25,7 +26,10 @@ class Assignment3:
         print("PyVCF version: %s" % vcf.VERSION)
         
         ## Call annotate_vcf_file here
-        self.vcf_path = ""  # TODO
+        self.vcf_path = "chr16.vcf"
+        self.hits = self.annotate_vcf_file()
+        self.genelist = []
+
 
     def annotate_vcf_file(self):
         '''
@@ -59,14 +63,27 @@ class Assignment3:
         ## Perform annotation
         res, con = h.request('http://myvariant.info/v1/variant', 'POST', params, headers=headers)
         annotation_result = con.decode('utf-8')
-        
+
+        # Alternative way with myvariant package (normal http request returns string not list/dict!
+        mv = myvariant.MyVariantInfo()
+
+        annotation_result = mv.getvariants(params)
+
         ## TODO now do something with the 'annotation_result'
-        
+        reslist = []
+        for result in annotation_result:
+            try:
+                if result['notfound']:
+                    pass
+                else:
+                    reslist.append(result)
+            except:
+                reslist.append(result)
         ##
         ## End example code
         ##
         
-        return None  ## return the data structure here
+        return reslist  ## return the data structure here
     
     
     def get_list_of_genes(self):
@@ -74,32 +91,60 @@ class Assignment3:
         Print the name of genes in the annotation data set
         :return:
         '''
-        print("TODO")
-    
+        print("List of genes: ")
+        for hit in self.hits:
+            try:
+                if hit['cadd']['gene']:
+                    #print(hit['cadd']['gene']['genename'])
+                    self.genelist.append(hit['cadd']['gene']['genename'])
+            except:
+                pass
+        print(self.genelist)
     
     def get_num_variants_modifier(self):
         '''
         Print the number of variants with putative_impact "MODIFIER"
         :return:
         '''
-        print("TODO")
-        
+        cnt = 0
+        for hit in self.hits:
+            if 'snpeff' in hit:
+                key, value = "putative_impact", "MODIFIER"
+                if key in hit['snpeff']['ann'] and value == hit['snpeff']['ann']['putative_impact']:
+                    cnt += 1
+
+        print("Num. of variants modifiers: ", cnt)
     
     def get_num_variants_with_mutationtaster_annotation(self):
         '''
         Print the number of variants with a 'mutationtaster' annotation
         :return:
         '''
-        print("TODO")
-        
+        cnt = 0
+        for hit in self.hits:
+            try:
+                if hit['dbnsfp']['mutationtaster']:
+                    cnt += 1
+            except:
+                pass
+        print("Num. variants with mutationtaster annotation: ", cnt)
     
     def get_num_variants_non_synonymous(self):
         '''
         Print the number of variants with 'consequence' 'NON_SYNONYMOUS'
         :return:
         '''
-        print("TODO")
-        
+        cnt = 0
+        for hit in self.hits:
+            try:
+                if 'cadd' in hit:
+                    key, value = "consequence", "NON_SYNONYMOUS"
+                    if key in hit['cadd'] and value == hit['cadd']['consequence']:
+                        cnt += 1
+            except:
+                pass
+
+        print("Num. of non synonymous variants: ", cnt)
     
     def view_vcf_in_browser(self):
         '''
@@ -109,24 +154,30 @@ class Assignment3:
         '''
    
         ## Document the final URL here
-        print("TODO")
+        print("The .vcf file was compressed with bgzip and a tabix index created with tabix -p vcf ch16.vcf")
+        print("The resulting files were uploaded to https://vcf.iobio.io/")
+        print("The final URL: https://vcf.iobio.io/?species=Human&build=GRCh38")
             
     
     def print_summary(self):
-        self.annotate_vcf_file()
-        print("Print all results here")
-    
-    
+        self.get_list_of_genes()
+        self.get_num_variants_modifier()
+        self.get_num_variants_with_mutationtaster_annotation()
+        self.get_num_variants_non_synonymous()
+        self.view_vcf_in_browser()
+
+
 def main():
     print("Assignment 3")
     assignment3 = Assignment3()
     assignment3.print_summary()
     print("Done with assignment 3")
-        
-        
+
+
 if __name__ == '__main__':
+    print(__author__)
     main()
-   
+
     
 
 
